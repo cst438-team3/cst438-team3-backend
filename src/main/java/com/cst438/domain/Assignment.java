@@ -20,7 +20,7 @@ public class Assignment {
     private String title;
 
     @Column(name="due_date")
-    private Date dueDate;
+    private String dueDate;
 
     @ManyToOne
     @JoinColumn(name = "section_no")
@@ -42,11 +42,11 @@ public class Assignment {
         this.title = title;
     }
 
-    public Date getDueDate() {
+    public String getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(Date dueDate) {
+    public void setDueDate(String dueDate) {
         this.dueDate = dueDate;
     }
 

@@ -18,8 +18,6 @@ public class GradeController {
     @Autowired
     private AssignmentRepository assignmentRepository;
 
-    // instructor gets grades for assignment ordered by student name
-    // user must be instructor for the section
     /**
      instructor lists the grades for an assignment for all enrolled students
      returns the list of grades (ordered by student name) for the assignment
@@ -28,14 +26,6 @@ public class GradeController {
      */
     @GetMapping("/assignments/{assignmentId}/grades")
     public List<GradeDTO> getAssignmentGrades(@PathVariable("assignmentId") int assignmentId) {
-
-        // TODO remove the following line when done
-
-        // get the list of enrollments for the section related to this assignment.
-        // hint: use te enrollment repository method findEnrollmentsBySectionOrderByStudentName.
-        // for each enrollment, get the grade related to the assignment and enrollment
-        // hint: use the gradeRepository findByEnrollmentIdAndAssignmentId method.
-
         Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
         int sectionNo = assignment.getSection().getSectionNo();
         List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsBySectionNoOrderByStudentName(sectionNo);
@@ -56,11 +46,7 @@ public class GradeController {
             gradeDTOList.add(gradeDTO);
         }
         return gradeDTOList;
-
     }
-
-    // instructor uploads grades for assignment
-    // user must be instructor for the section
     /**
      instructor updates one or more assignment grades
      only the score attribute of grade entity can be changed
