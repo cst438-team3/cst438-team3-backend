@@ -1,12 +1,22 @@
 package com.cst438.controller;
 
+import com.cst438.domain.*;
 import com.cst438.dto.GradeDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.ArrayList;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 public class GradeController {
+    @Autowired
+    private GradeRepository gradeRepository;
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+    @Autowired
+    private AssignmentRepository assignmentRepository;
 
     // instructor gets grades for assignment ordered by student name
     // user must be instructor for the section
@@ -26,8 +36,27 @@ public class GradeController {
         // for each enrollment, get the grade related to the assignment and enrollment
         // hint: use the gradeRepository findByEnrollmentIdAndAssignmentId method.
 
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
+        int sectionNo = assignment.getSection().getSectionNo();
+        List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsBySectionNoOrderByStudentName(sectionNo);
 
-        return null;
+        List<GradeDTO> gradeDTOList = new ArrayList<>();
+
+        for (Enrollment enrollment : enrollments) {
+            Grade grade = gradeRepository.findByEnrollmentIdAndAssignmentId(enrollment.getEnrollmentId(), assignmentId);
+            GradeDTO gradeDTO = new GradeDTO(
+                    grade.getGradeId(),
+                    enrollment.getStudent().getName(),
+                    enrollment.getStudent().getEmail(),
+                    assignment.getTitle(),
+                    assignment.getSection().getCourse().getCourseId(),
+                    assignment.getSection().getSecId(),
+                    grade.getScore()
+            );
+            gradeDTOList.add(gradeDTO);
+        }
+        return gradeDTOList;
+
     }
 
     // instructor uploads grades for assignment
@@ -39,12 +68,10 @@ public class GradeController {
      */
     @PutMapping("/grades")
     public void updateGrades(@RequestBody List<GradeDTO> dlist) {
-
-        // TODO
-
-        // for each grade in the GradeDTO list, retrieve the grade entity
-        // update the score and save the entity
-
+        for (GradeDTO grade : dlist) {
+            Grade g = gradeRepository.findById(grade.gradeId()).orElse(null);
+            g.setScore(grade.score());
+            gradeRepository.save(g);
+        }
     }
-
 }
