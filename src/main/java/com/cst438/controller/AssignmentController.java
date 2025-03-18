@@ -21,58 +21,61 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class AssignmentController {
 
-    /**
-     instructor lists assignments for a section.
-     Assignment data is returned ordered by due date.
-     logged in user must be the instructor for the section (assignment 7)
-     */
+    @Autowired
+    AssignmentRepository assignmentRepository;
+
+    @Autowired
+    SectionRepository sectionRepository;
+
     @GetMapping("/sections/{secNo}/assignments")
     public List<AssignmentDTO> getAssignments(
             @PathVariable("secNo") int secNo) {
-		
-		// hint: use the assignment repository method 
-		//  findBySectionNoOrderByDueDate to return 
-		//  a list of assignments
 
-        // TODO remove the following line when done
-        return null;
+        List<Assignment> assignments = assignmentRepository.findBySectionNoOrderByDueDate(secNo);
+        List<AssignmentDTO> assignmentDTO_list = new ArrayList<>();
+
+        for (Assignment a: assignments){
+            Section s = a.getSection();
+            Course c = s.getCourse();
+            assignmentDTO_list.add(new AssignmentDTO(a.getAssignmentId(),a.getTitle(),a.getDueDate(), c.getCourseId(), s.getSecId(),s.getSectionNo()) );
+        }
+        return assignmentDTO_list;
     }
 
-    /**
-     instructor creates an assignment for a section.
-     Assignment data with primary key is returned.
-     logged in user must be the instructor for the section (assignment 7)
-     */
     @PostMapping("/assignments")
     public AssignmentDTO createAssignment(
             @RequestBody AssignmentDTO dto) {
+        Assignment assignment = new Assignment();
+        assignment.setTitle(dto.title());
+        assignment.setDueDate(dto.dueDate());
 
-        // TODO remove the following line when done
-
-        return null;
+        Section section = sectionRepository.findById(dto.secId()).orElse(null);
+        assignment.setSection(section);
+        assignmentRepository.save(assignment);
+        return new AssignmentDTO(assignment.getAssignmentId(), assignment.getTitle(), assignment.getDueDate(), dto.courseId(), dto.secId(), dto.secNo());
     }
 
-    /**
-     instructor updates an assignment for a section.
-     only title and dueDate may be changed
-     updated assignment data is returned
-     logged in user must be the instructor for the section (assignment 7)
-     */
     @PutMapping("/assignments")
     public AssignmentDTO updateAssignment(@RequestBody AssignmentDTO dto) {
+        Assignment assignment = assignmentRepository.findById(dto.id()).orElse(null);
+        if (assignment == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "assignment id" + dto.id() + " not found");
+        }
+        assignment.setTitle(dto.title());
+        assignment.setDueDate(dto.dueDate());
 
-        // TODO remove the following line when done
+        Section section = sectionRepository.findById(dto.secId()).orElse(null);
+        assignment.setSection(section);
+        assignmentRepository.save(assignment);
+        return new AssignmentDTO(assignment.getAssignmentId(), assignment.getTitle(), assignment.getDueDate(), dto.courseId(), dto.secId(), dto.secNo());
 
-        return null;
     }
 
-    /**
-     instructor deletes an assignment for a section.
-     logged in user must be the instructor for the section (assignment 7)
-     */
     @DeleteMapping("/assignments/{assignmentId}")
     public void deleteAssignment(@PathVariable("assignmentId") int assignmentId) {
-
-        // TODO
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
+        if(assignment!=null){
+            assignmentRepository.delete(assignment);
+        }
     }
 }
