@@ -1,6 +1,7 @@
 package com.cst438.controller;
 
 import com.cst438.domain.*;
+import com.cst438.dto.AssignmentDTO;
 import com.cst438.dto.AssignmentStudentDTO;
 import com.cst438.dto.EnrollmentDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class StudentController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AssignmentRepository assignmentRepository;
 
     /**
      students lists there enrollments given year and semester value
@@ -49,6 +53,7 @@ public class StudentController {
 
        List<Enrollment> enrollments = enrollmentRepository.findByYearAndSemesterOrderByCourseId(year, semester, studentId);
        List<EnrollmentDTO> enrollmentDTOs = new ArrayList<>();
+
        for(Enrollment e : enrollments) {
            enrollmentDTOs.add(new EnrollmentDTO(
                    e.getEnrollmentId(),
@@ -83,13 +88,39 @@ public class StudentController {
        @RequestParam("year") int year,
        @RequestParam("semester") String semester) {
 
-       // TODO remove the following line when done
-
        // return a list of assignments and (if they exist) the assignment grade
        //  for all sections that the student is enrolled for the given year and semester
        //  hint: use the assignment repository method findByStudentIdAndYearAndSemesterOrderByDueDate
 
-       return null;
+       //check if studentId exists
+       User student = userRepository.findById(studentId)
+               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found with id: " + studentId));
+
+       //check if year & semester are valid
+       if(year < 1900 || year > 2100) {
+           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Year must be between 1900 and 2100.");
+       }
+
+       if(!("spring".equalsIgnoreCase(semester) || "fall".equalsIgnoreCase(semester))) {
+           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Semester must be Spring or Fall.");
+       }
+
+       List<Assignment> assignments = assignmentRepository.findByStudentIdAndYearAndSemesterOrderByDueDate(studentId, year, semester);
+       List<AssignmentStudentDTO> assignmentDTOS = new ArrayList<>();
+
+       //TODO: fix score
+       for (Assignment a : assignments) {
+           assignmentDTOS.add(new AssignmentStudentDTO(
+                   a.getAssignmentId(),
+                   a.getTitle(),
+                   a.getDueDate(),
+                   a.getSection().getCourse().getCourseId(),
+                   a.getSection().getSecId(),
+                   a.getGrades().getScore();
+           ));
+       }
+
+       return assignmentDTOS;
    }
 
 }

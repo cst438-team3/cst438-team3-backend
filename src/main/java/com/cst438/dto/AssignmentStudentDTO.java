@@ -8,7 +8,7 @@ public record AssignmentStudentDTO(
         int assignmentId,
 
         String title,
-        Date dueDate,
+        String dueDate,
         String courseId,
         int sectionId,
         Integer score
