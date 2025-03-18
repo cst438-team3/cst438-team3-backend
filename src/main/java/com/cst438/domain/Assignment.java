@@ -49,8 +49,4 @@ public class Assignment {
     public void setSection(Section section) {
         this.section = section;
     }
-    // TODO  complete this class
-    // add additional attributes for title, dueDate
-    // add relationship between assignment and section entities
-    // add getter and setter methods
 }
