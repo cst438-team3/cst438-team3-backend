@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 @Entity
 public class Assignment {
@@ -11,11 +12,18 @@ public class Assignment {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="assignment_id")
     private int assignmentId;
+
+    @Column(name="title")
     private String title;
+
+    @Column(name="due_date")
     private String dueDate;
 
+    @OneToMany(mappedBy = "assignment")
+    private List<Grade> grades;
+
     @ManyToOne
-    @JoinColumn(name="section_no", nullable = false)
+    @JoinColumn(name = "section_no")
     private Section section;
 
     public int getAssignmentId() {
@@ -49,4 +57,9 @@ public class Assignment {
     public void setSection(Section section) {
         this.section = section;
     }
+
+    public List<Grade> getGrades() {
+        return grades;
+    }
 }
+
