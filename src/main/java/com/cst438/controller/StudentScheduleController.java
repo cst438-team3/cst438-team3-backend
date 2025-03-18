@@ -1,12 +1,34 @@
 package com.cst438.controller;
 
+import com.cst438.domain.Enrollment;
+import com.cst438.domain.EnrollmentRepository;
+import com.cst438.domain.Section;
+import com.cst438.domain.SectionRepository;
+import com.cst438.domain.Term;
+import com.cst438.domain.User;
+import com.cst438.domain.UserRepository;
 import com.cst438.dto.EnrollmentDTO;
-import org.springframework.web.bind.annotation.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 public class StudentScheduleController {
+
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    private SectionRepository sectionRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      students lists their transcript containing all enrollments
@@ -16,13 +38,28 @@ public class StudentScheduleController {
      */
     @GetMapping("/transcripts")
     public List<EnrollmentDTO> getTranscript(@RequestParam("studentId") int studentId) {
-
-        // TODO
-
-        // list course_id, sec_id, title, credit, grade
-        // hint: use enrollment repository method findEnrollmentByStudentIdOrderByTermId
-        // remove the following line when done
-        return null;
+        List<EnrollmentDTO> transcript = new ArrayList<>();
+        List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsByStudentIdOrderByTermId(studentId);
+            for (Enrollment e : enrollments) {
+                transcript.add(new EnrollmentDTO(
+                    e.getEnrollmentId(),
+                    e.getGrade(),
+                    e.getStudent().getId(),
+                    e.getStudent().getName(),
+                    e.getStudent().getEmail(),
+                    e.getSection().getCourse().getCourseId(),
+                    e.getSection().getCourse().getTitle(),
+                    e.getSection().getSecId(),
+                    e.getSection().getSectionNo(),
+                    e.getSection().getBuilding(),
+                    e.getSection().getRoom(),
+                    e.getSection().getTimes(),
+                    e.getSection().getCourse().getCredits(),
+                    e.getSection().getTerm().getYear(),
+                    e.getSection().getTerm().getSemester()
+                ));
+            }
+        return transcript;
     }
 
 
@@ -35,19 +72,39 @@ public class StudentScheduleController {
     public EnrollmentDTO addCourse(
             @PathVariable int sectionNo,
             @RequestParam("studentId") int studentId ) {
+                Section section = sectionRepository.findById(sectionNo).orElse(null);
+                if (section == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionNo);
+                }
+                Term term = section.getTerm();
+                LocalDate addDate = term.getAddDate().toLocalDate();
+                LocalDate addDeadline = term.getAddDeadline().toLocalDate();
+                LocalDate today = LocalDate.now();
+            
+                if (today.isBefore(addDate) || today.isAfter(addDeadline)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot enroll outside of add/drop period.");
+                }
+                if (enrollmentRepository.findEnrollmentBySectionNoAndStudentId(sectionNo, studentId) != null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Student is already enrolled.");
+                }
 
-        // TODO
+                User student = userRepository.findById(studentId).orElse(null);
+                if (student == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found: " + studentId);
+                }
 
-        // check that the Section entity with primary key sectionNo exists
-        // check that today is between addDate and addDeadline for the section
-        // check that student is not already enrolled into this section
-        // create a new enrollment entity and save.  The enrollment grade will
-        // be NULL until instructor enters final grades for the course.
+                Enrollment enrollment = new Enrollment();
+                enrollment.setStudent(student);
+                enrollment.setSection(section);
+                enrollment.setGrade(null);
 
-        // remove the following line when done.
-        return null;
+                enrollmentRepository.save(enrollment);
 
-    }
+                return new EnrollmentDTO(enrollment.getEnrollmentId(), null, studentId, student.getName(), student.getEmail(),
+                section.getCourse().getCourseId(), section.getCourse().getTitle(), section.getSecId(), sectionNo,
+                section.getBuilding(), section.getRoom(), section.getTimes(), section.getCourse().getCredits(),
+                term.getYear(), term.getSemester());
+            }
 
 
     /**
@@ -56,9 +113,17 @@ public class StudentScheduleController {
      */
     @DeleteMapping("/enrollments/{enrollmentId}")
     public void dropCourse(@PathVariable("enrollmentId") int enrollmentId) {
-
-        // TODO
-        // check that today is not after the dropDeadline for section
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId).orElse(null);
+        if (enrollment == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found: " + enrollmentId);
+        }
+        Term term = enrollment.getSection().getTerm();
+        LocalDate dropDeadline = term.getDropDeadline().toLocalDate();
+        LocalDate today = LocalDate.now();
+        if (today.isAfter(dropDeadline)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot drop course after drop deadline.");
+        }
+        enrollmentRepository.delete(enrollment);
     }
 
 
