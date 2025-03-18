@@ -27,6 +27,9 @@ public class StudentController {
     @Autowired
     private AssignmentRepository assignmentRepository;
 
+    @Autowired
+    private GradeRepository gradeRepository;
+
     /**
      students lists there enrollments given year and semester value
      returns list of enrollments, may be empty
@@ -108,15 +111,20 @@ public class StudentController {
        List<Assignment> assignments = assignmentRepository.findByStudentIdAndYearAndSemesterOrderByDueDate(studentId, year, semester);
        List<AssignmentStudentDTO> assignmentDTOS = new ArrayList<>();
 
-       //TODO: fix score
        for (Assignment a : assignments) {
+           Optional<Grade> grade = gradeRepository.findGradeByAssignmentAndStudent(a.getAssignmentId(), studentId);
+           Integer score = null;
+           if (grade.isPresent()) {
+               score = grade.get().getScore();
+           }
+
            assignmentDTOS.add(new AssignmentStudentDTO(
                    a.getAssignmentId(),
                    a.getTitle(),
                    a.getDueDate(),
                    a.getSection().getCourse().getCourseId(),
                    a.getSection().getSecId(),
-                   a.getGrades().getScore();
+                   score
            ));
        }
 
