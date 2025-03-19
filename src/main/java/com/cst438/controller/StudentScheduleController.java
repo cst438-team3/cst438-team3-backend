@@ -118,10 +118,14 @@ public class StudentScheduleController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found: " + enrollmentId);
         }
         Term term = enrollment.getSection().getTerm();
+        LocalDate addDate = term.getAddDate().toLocalDate();
         LocalDate dropDeadline = term.getDropDeadline().toLocalDate();
         LocalDate today = LocalDate.now();
         if (today.isAfter(dropDeadline)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot drop course after drop deadline.");
+        }
+        if (today.isBefore(addDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot add course before add date.");
         }
         enrollmentRepository.delete(enrollment);
     }
