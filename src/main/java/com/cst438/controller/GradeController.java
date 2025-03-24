@@ -26,7 +26,7 @@ public class GradeController {
      */
     @GetMapping("/assignments/{assignmentId}/grades")
     public List<GradeDTO> getAssignmentGrades(@PathVariable("assignmentId") int assignmentId) {
-        Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new RuntimeException("Assignment not found"));
         int sectionNo = assignment.getSection().getSectionNo();
         List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsBySectionNoOrderByStudentName(sectionNo);
 
@@ -34,6 +34,13 @@ public class GradeController {
 
         for (Enrollment enrollment : enrollments) {
             Grade grade = gradeRepository.findByEnrollmentIdAndAssignmentId(enrollment.getEnrollmentId(), assignmentId);
+            if (grade == null) { // CHANGED: Check if grade exists
+                grade = new Grade(); // CHANGED: Instantiate new Grade
+                grade.setEnrollment(enrollment); // CHANGED: Associate the enrollment
+                grade.setAssignment(assignment);  // CHANGED: Associate the assignment
+                grade.setScore(null);             // CHANGED: Set score to null
+                grade = gradeRepository.save(grade); // CHANGED: Save the new grade entity
+            }
             GradeDTO gradeDTO = new GradeDTO(
                     grade.getGradeId(),
                     enrollment.getStudent().getName(),
@@ -55,7 +62,7 @@ public class GradeController {
     @PutMapping("/grades")
     public void updateGrades(@RequestBody List<GradeDTO> dlist) {
         for (GradeDTO grade : dlist) {
-            Grade g = gradeRepository.findById(grade.gradeId()).orElse(null);
+            Grade g = gradeRepository.findById(grade.gradeId()).orElseThrow(() -> new RuntimeException("Grade not found for id: " + grade.gradeId()));
             g.setScore(grade.score());
             gradeRepository.save(g);
         }
