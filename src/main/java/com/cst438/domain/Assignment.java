@@ -12,19 +12,15 @@ public class Assignment {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="assignment_id")
     private int assignmentId;
-
-    @Column(name="title")
     private String title;
-
     @Column(name="due_date")
     private String dueDate;
+    @ManyToOne
+    @JoinColumn(name = "section_no", nullable = false)
+    private Section section;
 
     @OneToMany(mappedBy = "assignment")
     private List<Grade> grades;
-
-    @ManyToOne
-    @JoinColumn(name = "section_no")
-    private Section section;
 
     public int getAssignmentId() {
         return assignmentId;
@@ -44,6 +40,15 @@ public class Assignment {
 
     public String getDueDate() {
         return dueDate;
+    }
+
+    public String getDueDateAsString() {
+        if (this.dueDate!=null) {
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+            return f.format(this.dueDate);
+        } else {
+            return null;
+        }
     }
 
     public void setDueDate(String dueDate) {
