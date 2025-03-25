@@ -44,7 +44,7 @@ public class AssignmentController {
             assignmentDTO_list.add(new AssignmentDTO(
                     a.getAssignmentId(),
                     a.getTitle(),
-                    a.getDueDateAsString(),
+                    a.getDueDate(),
                     a.getSection().getCourse().getCourseId(),
                     a.getSection().getSecId(),
                     a.getSection().getSectionNo()));
