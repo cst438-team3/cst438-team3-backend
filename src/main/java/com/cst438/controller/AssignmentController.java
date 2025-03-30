@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -54,17 +57,32 @@ public class AssignmentController {
 
     @PostMapping("/assignments")
     public AssignmentDTO createAssignment(
-            @RequestBody AssignmentDTO dto) {
+            @RequestBody AssignmentDTO dto) throws ParseException {
+        Section section = sectionRepository.findById(dto.secNo())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "section not found"));
+
+        Date termEndDate = section.getTerm().getEndDate();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date dueDate = dateFormat.parse(dto.dueDate());
+        if (dueDate.after(termEndDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Due date is past term end date");
+        }
+
         Assignment assignment = new Assignment();
         assignment.setTitle(dto.title());
-        assignment.setDueDate(dto.dueDate());
-        Section section = sectionRepository.findById(dto.secNo()).orElse(null);
-        if (section==null) {
-            throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "section not found");
-        }
+        assignment.setDueDate(dto.dueDate()); // Keep as string for storage
         assignment.setSection(section);
         assignmentRepository.save(assignment);
-        return new AssignmentDTO(assignment.getAssignmentId(), assignment.getTitle(), assignment.getDueDate(), dto.courseId(), dto.secId(), dto.secNo());
+
+        return new AssignmentDTO(
+                assignment.getAssignmentId(),
+                assignment.getTitle(),
+                assignment.getDueDate(),
+                dto.courseId(),
+                dto.secId(),
+                dto.secNo()
+        );
     }
 
     @PutMapping("/assignments")
