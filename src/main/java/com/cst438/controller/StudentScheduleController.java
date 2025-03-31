@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 public class StudentScheduleController {
 
     @Autowired
