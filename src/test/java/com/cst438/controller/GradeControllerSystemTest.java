@@ -9,9 +9,11 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AssignmentControllerSystemTest {
+
+public class GradeControllerSystemTest {
 
     // chrome driver
     public static final String CHROME_DRIVER_LOCATION =
@@ -25,13 +27,14 @@ public class AssignmentControllerSystemTest {
 
     // the following tests assume:
     // 1.  There are course sections in Spring 2025
-    // 2. There are no assignments for section 9 cst363
+    // 2. There are no assignments for section 10 cst363
 
     @BeforeEach
     public void setUpDriver() throws Exception {
 
-        // set required Chrome Driver properties
-        System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_LOCATION);
+        // set properties required by Chrome Driver
+        System.setProperty(
+                "webdriver.chrome.driver", CHROME_DRIVER_LOCATION);
         ChromeOptions ops = new ChromeOptions();
         ops.addArguments("--remote-allow-origins=*");
 
@@ -39,13 +42,14 @@ public class AssignmentControllerSystemTest {
         driver = new ChromeDriver(ops);
 
         driver.get(URL);
-        // adding short wait to allow page to load
+        // must have a short wait to allow time for the page to download
         Thread.sleep(SLEEP_DURATION);
+
     }
 
     @AfterEach
     public void terminateDriver() {
-        if (driver != null){
+        if (driver != null) {
             // quit driver
             driver.close();
             driver.quit();
@@ -54,13 +58,12 @@ public class AssignmentControllerSystemTest {
     }
 
     @Test
-    public void systemTestAddAssignment() throws Exception {
+    public void systemTestGradeAssignment() throws Exception {
         // views sections for spring 2025
-        // views assignments for section 9
-        // Add a new assignment for section 9
-        // verify assigment added
-        // delete the added assignment
-        // verify assignment is gone
+        // views assignments for section 10
+        // Add a new assignment for section 10
+        // Add a grade for assignment for student 'thomas edison' of 90
+        // verify score for assignment is saved - "scored saved" message displayed, score text = 90
 
         // enter search terms and click show sections link
         driver.findElement(By.id("year")).sendKeys("2025");
@@ -68,8 +71,8 @@ public class AssignmentControllerSystemTest {
         driver.findElement(By.id("showSections")).click();
         Thread.sleep(SLEEP_DURATION);
 
-        // view assignments for section 9
-        WebElement section9 = driver.findElement(By.xpath("//tr[td='9']"));
+        // view assignments for section 10
+        WebElement section9 = driver.findElement(By.xpath("//tr[td='10']"));
         WebElement viewAssignments = section9.findElement(By.id("viewAssignments"));
         viewAssignments.click();
         Thread.sleep(SLEEP_DURATION);
@@ -95,11 +98,24 @@ public class AssignmentControllerSystemTest {
         driver.findElement(By.id("save")).click();
         Thread.sleep(SLEEP_DURATION);
 
-        // verify assignment added
-        // TODO: use unit test to verify assignment added
-        WebElement assignment = driver.findElement(By.xpath("//tr[td='Test Assignment 1']"));
-        assertNotNull(assignment);
-        assertTrue(assignment.isDisplayed(), "Assignment not displayed");
+        // add a grade for assignment for student Thomas Edison
+        driver.findElement(By.id("grade")).click();
+        Thread.sleep(SLEEP_DURATION);
+
+        // enter assignment score
+        driver.findElement(By.id("score")).sendKeys("90");
+        driver.findElement(By.id("save")).click();
+        Thread.sleep(SLEEP_DURATION);
+
+        // verify score for assignment is saved
+        // TODO: use unit test to verify score saved
+        WebElement message = driver.findElement(By.id("message"));
+        assertEquals("score saved", message.getText());
+        assertEquals("90", driver.findElement(By.id("score")).getAttribute("value"));
+
+        // navigate back to assignment view
+        driver.navigate().back();
+        Thread.sleep(SLEEP_DURATION);
 
         // delete the added assignment
         WebElement deleteButton = driver.findElement(By.id("delete"));
