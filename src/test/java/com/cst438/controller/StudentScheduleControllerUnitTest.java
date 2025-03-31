@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,6 +49,9 @@ public class StudentScheduleControllerUnitTest {
         assertNotNull(enrollment);
 
         enrollmentRepository.delete(enrollment);
+
+        enrollment = enrollmentRepository.findEnrollmentBySectionNoAndStudentId(sectionNo, studentId);
+        assertNull(enrollment);
     }
 
 
@@ -67,7 +70,7 @@ public class StudentScheduleControllerUnitTest {
         assertEquals(400, response.getStatus());
 
         String errorMessage = response.getErrorMessage();
-        assertTrue(errorMessage.contains("Student is already enrolled"));
+        assertEquals("Student is already enrolled.", errorMessage);
     }
 
 
@@ -86,7 +89,10 @@ public class StudentScheduleControllerUnitTest {
         assertEquals(404, response.getStatus());
 
         String errorMessage = response.getErrorMessage();
-        assertTrue(errorMessage.contains("Section not found"));
+        assertEquals("Section not found: " + sectionNo, errorMessage);
+
+        Enrollment e = enrollmentRepository.findEnrollmentBySectionNoAndStudentId(999, 5);
+        assertNull(e);
     }
 
 
@@ -105,7 +111,10 @@ public class StudentScheduleControllerUnitTest {
         assertEquals(400, response.getStatus());
 
         String errorMessage = response.getErrorMessage();
-        assertTrue(errorMessage.contains("Cannot enroll outside of add/drop period"));
+        assertEquals("Cannot enroll outside of add/drop period.", errorMessage);
+
+        Enrollment e = enrollmentRepository.findEnrollmentBySectionNoAndStudentId(1, 5);
+        assertNull(e);
     }
 
     private static <T> T fromJsonString(String str, Class<T> valueType) {
