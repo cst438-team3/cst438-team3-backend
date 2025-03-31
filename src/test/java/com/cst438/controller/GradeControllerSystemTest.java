@@ -108,7 +108,6 @@ public class GradeControllerSystemTest {
         Thread.sleep(SLEEP_DURATION);
 
         // verify score for assignment is saved
-        // TODO: use unit test to verify score saved
         WebElement message = driver.findElement(By.id("message"));
         assertEquals("score saved", message.getText());
         assertEquals("90", driver.findElement(By.id("score")).getAttribute("value"));

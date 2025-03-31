@@ -96,7 +96,6 @@ public class AssignmentControllerSystemTest {
         Thread.sleep(SLEEP_DURATION);
 
         // verify assignment added
-        // TODO: use unit test to verify assignment added
         WebElement assignment = driver.findElement(By.xpath("//tr[td='Test Assignment 1']"));
         assertNotNull(assignment);
         assertTrue(assignment.isDisplayed(), "Assignment not displayed");
