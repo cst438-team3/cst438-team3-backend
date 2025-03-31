@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -54,17 +57,32 @@ public class AssignmentController {
 
     @PostMapping("/assignments")
     public AssignmentDTO createAssignment(
-            @RequestBody AssignmentDTO dto) {
+            @RequestBody AssignmentDTO dto) throws ParseException {
+        Section section = sectionRepository.findById(dto.secNo())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "section not found"));
+
+        Date termEndDate = section.getTerm().getEndDate();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date dueDate = dateFormat.parse(dto.dueDate());
+        if (dueDate.after(termEndDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Due date is past term end date");
+        }
+
         Assignment assignment = new Assignment();
         assignment.setTitle(dto.title());
-        assignment.setDueDate(dto.dueDate());
-        Section section = sectionRepository.findById(dto.secNo()).orElse(null);
-        if (section==null) {
-            throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "section not found");
-        }
+        assignment.setDueDate(dto.dueDate()); // Keep as string for storage
         assignment.setSection(section);
         assignmentRepository.save(assignment);
-        return new AssignmentDTO(assignment.getAssignmentId(), assignment.getTitle(), assignment.getDueDate(), dto.courseId(), dto.secId(), dto.secNo());
+
+        return new AssignmentDTO(
+                assignment.getAssignmentId(),
+                assignment.getTitle(),
+                assignment.getDueDate(),
+                dto.courseId(),
+                dto.secId(),
+                dto.secNo()
+        );
     }
 
     @PutMapping("/assignments")
@@ -89,39 +107,4 @@ public class AssignmentController {
         }
     }
 
-    // student lists their assignments/grades for an enrollment ordered by due date
-    // student must be enrolled in the section
-    @GetMapping("/assignments")
-    public List<AssignmentStudentDTO> getStudentAssignments(
-            @RequestParam("studentId") int studentId,
-            @RequestParam("year") int year,
-            @RequestParam("semester") String semester) {
-
-        // check that this enrollment is for the logged in user student.
-
-        List<AssignmentStudentDTO> dlist = new ArrayList<>();
-        List<Assignment> alist = assignmentRepository.findByStudentIdAndYearAndSemesterOrderByDueDate(studentId, year, semester);
-        for (Assignment a : alist) {
-
-            Enrollment e = enrollmentRepository.findEnrollmentBySectionNoAndStudentId(a.getSection().getSectionNo(), studentId);
-            if (e==null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "enrollment not found studentId:"+studentId+" sectionNo:"+a.getSection().getSectionNo());
-            }
-
-            // if assignment has been graded, include the score
-            Grade grade = gradeRepository.findByEnrollmentIdAndAssignmentId( e.getEnrollmentId(), a.getAssignmentId());
-
-            System.out.println(grade);
-
-            dlist.add(new AssignmentStudentDTO(
-                    a.getAssignmentId(),
-                    a.getTitle(),
-                    a.getDueDate(),
-                    a.getSection().getCourse().getCourseId(),
-                    a.getSection().getSecId(),
-                    (grade!=null)? grade.getScore(): null ));
-
-        }
-        return dlist;
-    }
 }
