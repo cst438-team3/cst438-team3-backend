@@ -103,6 +103,12 @@ public class AssignmentController {
     public void deleteAssignment(@PathVariable("assignmentId") int assignmentId) {
         Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
         if(assignment!=null){
+            List<Grade> grades = gradeRepository.findByAssignmentId(assignmentId);
+
+            for(Grade g: grades){
+                gradeRepository.delete(g);
+            }
+
             assignmentRepository.delete(assignment);
         }
     }
