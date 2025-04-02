@@ -25,10 +25,6 @@ public class StudentScheduleControllerSystemTest {
 
     WebDriver driver;
 
-    // the following tests assume:
-    // 1.  There are course sections in Spring 2025
-    // 2. There are no assignments for section 10 cst363
-
     @BeforeEach
     public void setUpDriver() throws Exception {
 
@@ -64,8 +60,13 @@ public class StudentScheduleControllerSystemTest {
         // view student schedule and verify section 5 is in the schedule
         // disenroll from added section and verify disenrollment
 
-        // check if enrolled in section 5
+        // check if enrolled in section 5 for 2024 Fall
         driver.findElement(By.id("schedule")).click();
+        Thread.sleep(SLEEP_DURATION);
+
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
+        driver.findElement(By.id("load")).click();
         Thread.sleep(SLEEP_DURATION);
 
         // if enrolled in section 5, disenroll
@@ -92,6 +93,11 @@ public class StudentScheduleControllerSystemTest {
 
         // view student schedule and verify section 5 is in the schedule
         driver.findElement(By.id("schedule")).click();
+        Thread.sleep(SLEEP_DURATION);
+
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
+        driver.findElement(By.id("load")).click();
         Thread.sleep(SLEEP_DURATION);
 
         WebElement section5Schedule = driver.findElement(By.xpath("//tr[td='5']"));
