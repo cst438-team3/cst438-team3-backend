@@ -3,7 +3,9 @@ package com.cst438.controller;
 import com.cst438.domain.*;
 import com.cst438.dto.GradeDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -26,7 +28,10 @@ public class GradeController {
      */
     @GetMapping("/assignments/{assignmentId}/grades")
     public List<GradeDTO> getAssignmentGrades(@PathVariable("assignmentId") int assignmentId) {
-        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new RuntimeException("Assignment not found"));
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
+        if (assignment==null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "assignment not found");
+        }
         int sectionNo = assignment.getSection().getSectionNo();
         List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsBySectionNoOrderByStudentName(sectionNo);
 

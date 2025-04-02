@@ -1,7 +1,10 @@
 package com.cst438.controller;
 
+import com.cst438.domain.Assignment;
+import com.cst438.domain.AssignmentRepository;
 import com.cst438.domain.Section;
 import com.cst438.domain.SectionRepository;
+import com.cst438.dto.AssignmentDTO;
 import com.cst438.dto.SectionDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -13,7 +16,13 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /*
  * example of unit test to add a section to an existing course
@@ -28,6 +37,9 @@ public class SectionControllerUnitTest {
 
     @Autowired
     SectionRepository sectionRepository;
+
+    @Autowired
+    AssignmentRepository assignmentRepository;;
 
     @Test
     public void addSection() throws Exception {
@@ -55,8 +67,7 @@ public class SectionControllerUnitTest {
         // specify MediaType for request and response data
         // convert section to String data and set as request content
         response = mvc.perform(
-                        MockMvcRequestBuilders
-                                .post("/sections")
+                        post("/sections")
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(asJsonString(section)))
@@ -115,8 +126,7 @@ public class SectionControllerUnitTest {
 
         // issue the POST request
         response = mvc.perform(
-                        MockMvcRequestBuilders
-                                .post("/sections")
+                        post("/sections")
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(asJsonString(section)))
@@ -131,6 +141,109 @@ public class SectionControllerUnitTest {
         assertEquals("course not found cst599", message);
 
     }
+
+
+    @Test
+    public void addAssignment() throws Exception {
+        MockHttpServletResponse response;
+        AssignmentDTO assignment = new AssignmentDTO(
+                4,
+                "test assignment",
+                "2024-12-16",
+                "cst338",
+                1,
+                1
+        );
+
+        response = mvc.perform(
+                        post("/assignments")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(asJsonString(assignment)))
+                .andReturn()
+                .getResponse();
+
+        assertEquals(200, response.getStatus());
+        AssignmentDTO result = fromJsonString(response.getContentAsString(), AssignmentDTO.class);
+        assertNotEquals(0, result.id());
+        assertEquals("test assignment", result.title());
+        assertEquals("cst338", result.courseId()); // Check against actual course ID
+
+        Assignment a = assignmentRepository.findById(result.id()).orElse(null);
+        assertNotNull(a);
+        assertEquals("cst338", a.getSection().getCourse().getCourseId());
+
+        response = mvc.perform(
+                        MockMvcRequestBuilders
+                                .delete("/assignments/" + result.id()))
+                .andReturn()
+                .getResponse();
+        assertEquals(200, response.getStatus());
+
+        a = assignmentRepository.findById(result.id()).orElse(null);
+        assertNull(a);
+    }
+
+    @Test
+    public void addAssignmentFailsBadSection() throws Exception {
+        MockHttpServletResponse response;
+
+        AssignmentDTO assignment = new AssignmentDTO(
+                4,
+                "invalid assignment",
+                "2025-05-01",
+                "cst338",
+                1,
+                999
+        );
+
+        response = mvc.perform(
+                        post("/assignments")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(asJsonString(assignment)))
+                .andReturn()
+                .getResponse();
+        assertEquals(404, response.getStatus());
+        assertEquals("section not found", response.getErrorMessage());
+    }
+
+    @Test
+    public void addAssignmentWithInvalidDueDate() throws Exception {
+        Section section = sectionRepository.findById(1).orElseThrow();
+        Date termEndDate = section.getTerm().getEndDate();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(termEndDate);
+        calendar.add(Calendar.DATE, 1);
+        Date invalidDate = calendar.getTime();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String invalidDueDate = dateFormat.format(invalidDate);
+
+        AssignmentDTO assignment = new AssignmentDTO(
+                4,
+                "late assignment",
+                invalidDueDate,
+                "cst338",
+                1,
+                1
+        );
+
+        MockHttpServletResponse response = mvc.perform(
+                        post("/assignments")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(asJsonString(assignment)))
+                .andReturn()
+                .getResponse();
+
+        assertEquals(400, response.getStatus());
+        assertEquals("Due date is past term end date", response.getErrorMessage());
+
+    }
+
+
+
 
     private static String asJsonString(final Object obj) {
         try {
