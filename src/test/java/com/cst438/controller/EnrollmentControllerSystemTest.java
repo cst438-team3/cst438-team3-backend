@@ -53,14 +53,14 @@ public class EnrollmentControllerSystemTest {
 
     @Test
     public void systemTestAddFinalGrade() throws Exception {
-        // views sections for spring 2025
+        // views sections for fall 2024
         // views enrollments for section 10
         // Add a final grade for section 10, student 'thomas edison' of grade A
         //verify grade saved - 'grade saved' message displayed, grade text = A
 
         // enter search terms and click show sections link
-        driver.findElement(By.id("year")).sendKeys("2025");
-        driver.findElement(By.id("semester")).sendKeys("Spring");
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
         driver.findElement(By.id("showSections")).click();
         Thread.sleep(SLEEP_DURATION);
 

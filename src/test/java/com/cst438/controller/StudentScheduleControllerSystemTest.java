@@ -25,10 +25,6 @@ public class StudentScheduleControllerSystemTest {
 
     WebDriver driver;
 
-    // the following tests assume:
-    // 1.  There are course sections in Spring 2025
-    // 2. There are no assignments for section 10 cst363
-
     @BeforeEach
     public void setUpDriver() throws Exception {
 
@@ -60,18 +56,23 @@ public class StudentScheduleControllerSystemTest {
     @Test
     public void systemTestEnrollSection () throws Exception {
         // view available sections to enroll in
-        // enroll in section 5 software engineering
-        // view student schedule and verify section 5 is in the schedule
+        // enroll in section 10 software engineering
+        // view student schedule and verify section 10 is in the schedule
         // disenroll from added section and verify disenrollment
 
-        // check if enrolled in section 5
+        // check if enrolled in section 10 for 2024 Fall
         driver.findElement(By.id("schedule")).click();
         Thread.sleep(SLEEP_DURATION);
 
-        // if enrolled in section 5, disenroll
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
+        driver.findElement(By.id("load")).click();
+        Thread.sleep(SLEEP_DURATION);
+
+        // if enrolled in section 10, disenroll
         try{
-            WebElement sec5 = driver.findElement(By.xpath("//tr[td='5']"));
-            sec5.findElement(By.id("drop")).click();
+            WebElement sec10 = driver.findElement(By.xpath("//tr[td='10']"));
+            sec10.findElement(By.id("drop")).click();
             Thread.sleep(SLEEP_DURATION);
         } catch (NoSuchElementException e){
             // proceed
@@ -81,31 +82,36 @@ public class StudentScheduleControllerSystemTest {
         driver.findElement(By.id("enroll")).click();
         Thread.sleep(SLEEP_DURATION);
 
-        // enroll in section 5 software engineering
-        WebElement section5 = driver.findElement(By.xpath("//tr[td='5']"));
+        // enroll in section 10 software engineering
+        WebElement section5 = driver.findElement(By.xpath("//tr[td='10']"));
         section5.findElement(By.id("enroll")).click();
         Thread.sleep(SLEEP_DURATION);
 
         //verify enrollment message
         WebElement message = driver.findElement(By.id("message"));
-        assertEquals("Successfully enrolled in section 5", message.getText());
+        assertEquals("Successfully enrolled in section 10", message.getText());
 
-        // view student schedule and verify section 5 is in the schedule
+        // view student schedule and verify section 10 is in the schedule
         driver.findElement(By.id("schedule")).click();
         Thread.sleep(SLEEP_DURATION);
 
-        WebElement section5Schedule = driver.findElement(By.xpath("//tr[td='5']"));
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
+        driver.findElement(By.id("load")).click();
+        Thread.sleep(SLEEP_DURATION);
+
+        WebElement section5Schedule = driver.findElement(By.xpath("//tr[td='10']"));
         assertEquals("Software Engineering", section5Schedule.findElement(By.id("title")).getText());
-        assertEquals("5", section5Schedule.findElement(By.id("secNo")).getText());
+        assertEquals("10", section5Schedule.findElement(By.id("secNo")).getText());
 
         // disenroll from added section and verify disenrollment
-        WebElement sec5 = driver.findElement(By.xpath("//tr[td='5']"));
-        sec5.findElement(By.id("drop")).click();
+        WebElement sec10 = driver.findElement(By.xpath("//tr[td='10']"));
+        sec10.findElement(By.id("drop")).click();
         Thread.sleep(SLEEP_DURATION);
 
         // verify disenrollment
         assertThrows(NoSuchElementException.class, () -> {
-            driver.findElement(By.xpath("//tr[td='5']"));
+            driver.findElement(By.xpath("//tr[td='10']"));
         });
     }
 }

@@ -24,7 +24,7 @@ public class AssignmentControllerSystemTest {
     WebDriver driver;
 
     // the following tests assume:
-    // 1.  There are course sections in Spring 2025
+    // 1.  There are course sections in Fall 2024
     // 2. There are no assignments for section 9 cst363
 
     @BeforeEach
@@ -55,7 +55,7 @@ public class AssignmentControllerSystemTest {
 
     @Test
     public void systemTestAddAssignment() throws Exception {
-        // views sections for spring 2025
+        // views sections for fall 2024
         // views assignments for section 9
         // Add a new assignment for section 9
         // verify assigment added
@@ -63,8 +63,8 @@ public class AssignmentControllerSystemTest {
         // verify assignment is gone
 
         // enter search terms and click show sections link
-        driver.findElement(By.id("year")).sendKeys("2025");
-        driver.findElement(By.id("semester")).sendKeys("Spring");
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
         driver.findElement(By.id("showSections")).click();
         Thread.sleep(SLEEP_DURATION);
 
