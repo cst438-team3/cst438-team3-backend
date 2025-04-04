@@ -59,15 +59,15 @@ public class GradeControllerSystemTest {
 
     @Test
     public void systemTestGradeAssignment() throws Exception {
-        // views sections for spring 2025
+        // views sections for fall 2024
         // views assignments for section 10
         // Add a new assignment for section 10
         // Add a grade for assignment for student 'thomas edison' of 90
         // verify score for assignment is saved - "scored saved" message displayed, score text = 90
 
         // enter search terms and click show sections link
-        driver.findElement(By.id("year")).sendKeys("2025");
-        driver.findElement(By.id("semester")).sendKeys("Spring");
+        driver.findElement(By.id("year")).sendKeys("2024");
+        driver.findElement(By.id("semester")).sendKeys("Fall");
         driver.findElement(By.id("showSections")).click();
         Thread.sleep(SLEEP_DURATION);
 
