@@ -113,4 +113,26 @@ public class AssignmentController {
         }
     }
 
+    @GetMapping("/assignments")
+    public List<AssignmentDTO> getAssignmentsByStudent(
+            @RequestParam int studentId,
+            @RequestParam int year,
+            @RequestParam String semester) {
+        // Your logic to fetch assignments based on studentId, year, and semester
+        List<Assignment> assignments = assignmentRepository.findByStudentIdAndYearAndSemesterOrderByDueDate(studentId, year, semester);
+        List<AssignmentDTO> assignmentDTOList = new ArrayList<>();
+
+        for (Assignment assignment : assignments) {
+            assignmentDTOList.add(new AssignmentDTO(
+                    assignment.getAssignmentId(),
+                    assignment.getTitle(),
+                    assignment.getDueDate(),
+                    assignment.getSection().getCourse().getCourseId(),
+                    assignment.getSection().getSecId(),
+                    assignment.getSection().getSectionNo()));
+        }
+
+        return assignmentDTOList;
+    }
+
 }
