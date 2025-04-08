@@ -113,26 +113,40 @@ public class AssignmentController {
         }
     }
 
+    // student lists their assignments/grades for an enrollment ordered by due date
+    // student must be enrolled in the section
     @GetMapping("/assignments")
-    public List<AssignmentDTO> getAssignmentsByStudent(
-            @RequestParam int studentId,
-            @RequestParam int year,
-            @RequestParam String semester) {
-        // Your logic to fetch assignments based on studentId, year, and semester
-        List<Assignment> assignments = assignmentRepository.findByStudentIdAndYearAndSemesterOrderByDueDate(studentId, year, semester);
-        List<AssignmentDTO> assignmentDTOList = new ArrayList<>();
+    public List<AssignmentStudentDTO> getStudentAssignments(
+            @RequestParam("studentId") int studentId,
+            @RequestParam("year") int year,
+            @RequestParam("semester") String semester) {
 
-        for (Assignment assignment : assignments) {
-            assignmentDTOList.add(new AssignmentDTO(
-                    assignment.getAssignmentId(),
-                    assignment.getTitle(),
-                    assignment.getDueDate(),
-                    assignment.getSection().getCourse().getCourseId(),
-                    assignment.getSection().getSecId(),
-                    assignment.getSection().getSectionNo()));
+        // check that this enrollment is for the logged in user student.
+
+        List<AssignmentStudentDTO> dlist = new ArrayList<>();
+        List<Assignment> alist = assignmentRepository.findByStudentIdAndYearAndSemesterOrderByDueDate(studentId, year, semester);
+        for (Assignment a : alist) {
+
+            Enrollment e = enrollmentRepository.findEnrollmentBySectionNoAndStudentId(a.getSection().getSectionNo(), studentId);
+            if (e==null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "enrollment not found studentId:"+studentId+" sectionNo:"+a.getSection().getSectionNo());
+            }
+
+            // if assignment has been graded, include the score
+            Grade grade = gradeRepository.findByEnrollmentIdAndAssignmentId( e.getEnrollmentId(), a.getAssignmentId());
+
+            System.out.println(grade);
+
+            dlist.add(new AssignmentStudentDTO(
+                    a.getAssignmentId(),
+                    a.getTitle(),
+                    a.getDueDate(),
+                    a.getSection().getCourse().getCourseId(),
+                    a.getSection().getSecId(),
+                    (grade!=null)? grade.getScore(): null ));
+
         }
-
-        return assignmentDTOList;
+        return dlist;
     }
 
 }
