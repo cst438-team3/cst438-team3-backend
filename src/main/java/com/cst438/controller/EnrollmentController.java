@@ -4,6 +4,8 @@ package com.cst438.controller;
 import com.cst438.domain.Enrollment;
 import com.cst438.domain.EnrollmentRepository;
 import com.cst438.dto.EnrollmentDTO;
+import com.cst438.service.RegistrarServiceProxy;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,9 @@ public class EnrollmentController {
 
     @Autowired
     private EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    private RegistrarServiceProxy registrarServiceProxy;
 
     /**
      instructor gets list of enrollments for a section
@@ -67,7 +72,8 @@ public class EnrollmentController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found");
             }
             enrollment.setGrade(dto.grade());
-            enrollmentRepository.save(enrollment);  
+            enrollmentRepository.save(enrollment);
+            registrarServiceProxy.sendFinalGradeUpdate(dto);  
         }
     }
 }
