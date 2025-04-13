@@ -1,7 +1,5 @@
 package com.cst438.controller;
 
-import com.cst438.domain.Assignment;
-import com.cst438.domain.AssignmentRepository;
 import com.cst438.domain.Section;
 import com.cst438.domain.SectionRepository;
 import com.cst438.dto.AssignmentDTO;
@@ -17,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
 
