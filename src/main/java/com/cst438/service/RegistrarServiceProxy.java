@@ -82,6 +82,7 @@ public class RegistrarServiceProxy {
                 case "deleteCourse":
                     String courseIdToDelete = parts[1];
                     courseRepository.deleteById(courseIdToDelete);
+                    break;
                 
                 case "addUser":
                     UserDTO userDTO = fromJsonString(parts[1], UserDTO.class);
