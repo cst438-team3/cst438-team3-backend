@@ -3,6 +3,7 @@ package com.cst438.controller;
 import com.cst438.domain.User;
 import com.cst438.domain.UserRepository;
 import com.cst438.dto.UserDTO;
+import com.cst438.service.GradebookServiceProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
