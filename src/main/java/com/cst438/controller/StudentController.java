@@ -24,12 +24,6 @@ public class StudentController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private AssignmentRepository assignmentRepository;
-
-    @Autowired
-    private GradeRepository gradeRepository;
-
     /**
      students lists there enrollments given year and semester value
      returns list of enrollments, may be empty

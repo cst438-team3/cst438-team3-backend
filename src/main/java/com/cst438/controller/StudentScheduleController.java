@@ -31,6 +31,9 @@ public class StudentScheduleController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    GradebookServiceProxy gradebookServiceProxy;
+
     /**
      students lists their transcript containing all enrollments
      returns list of enrollments in chronological order
@@ -98,13 +101,16 @@ public class StudentScheduleController {
                 enrollment.setStudent(student);
                 enrollment.setSection(section);
                 enrollment.setGrade(null);
-
                 enrollmentRepository.save(enrollment);
 
-                return new EnrollmentDTO(enrollment.getEnrollmentId(), null, studentId, student.getName(), student.getEmail(),
+                 EnrollmentDTO enrollmentDTO =  new EnrollmentDTO(enrollment.getEnrollmentId(), null, studentId, student.getName(), student.getEmail(),
                 section.getCourse().getCourseId(), section.getCourse().getTitle(), section.getSecId(), sectionNo,
                 section.getBuilding(), section.getRoom(), section.getTimes(), section.getCourse().getCredits(),
                 term.getYear(), term.getSemester());
+
+                 gradebookServiceProxy.addEnrollment(enrollmentDTO);
+
+                 return enrollmentDTO;
             }
 
 
@@ -129,7 +135,6 @@ public class StudentScheduleController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot add course before add date.");
         }
         enrollmentRepository.delete(enrollment);
+        gradebookServiceProxy.deleteEnrollment(enrollmentId);
     }
-
-
 }

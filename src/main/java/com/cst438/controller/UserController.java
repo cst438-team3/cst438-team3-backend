@@ -22,6 +22,9 @@ public class UserController {
 
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
+    @Autowired
+    GradebookServiceProxy gradebookServiceProxy;
+
     /**
      list all users
      */
@@ -58,7 +61,11 @@ public class UserController {
             throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "invalid user type");
         }
         userRepository.save(user);
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getType());
+
+        UserDTO newUserDTO = new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getType());
+        gradebookServiceProxy.createUser(newUserDTO);
+
+        return newUserDTO;
     }
 
     /**
@@ -80,7 +87,11 @@ public class UserController {
             throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "invalid user type");
         }
         userRepository.save(user);
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getType());
+
+        UserDTO updatedUserDTO = new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getType());
+        gradebookServiceProxy.updateUser(updatedUserDTO);
+
+        return updatedUserDTO;
     }
 
     /**
@@ -91,6 +102,7 @@ public class UserController {
         User user = userRepository.findById(id).orElse(null);
         if (user!=null) {
             userRepository.delete(user);
+            gradebookServiceProxy.deleteUser(id);
         }
 
     }
