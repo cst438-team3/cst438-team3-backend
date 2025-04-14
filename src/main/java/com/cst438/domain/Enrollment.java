@@ -41,6 +41,10 @@ public class Enrollment {
         return section;
     }
 
+    public void setEnrollmentId(int enrollmentId) {
+        this.enrollmentId = enrollmentId;
+    }
+
     public void setStudent(User student) {
         this.student = student;
     }

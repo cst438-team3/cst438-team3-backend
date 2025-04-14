@@ -79,15 +79,9 @@ public class RegistrarServiceProxy {
                     }
                     break;
 
-                case "deleteCourse": // ASK TEAM ABOUT THIS CASE ***************** IT WORKS BUT DOES IT MATTER IF COURSE IS TIED TO A SECTION?
+                case "deleteCourse":
                     String courseIdToDelete = parts[1];
-                    try {
-                        courseRepository.deleteById(courseIdToDelete);
-                        System.out.println("Course " + courseIdToDelete + " deleted successfully.");
-                    } catch (Exception e) {
-                        System.err.println("Cannot delete course: " + courseIdToDelete + " it is tied to a section.");
-                    }
-                    break;
+                    courseRepository.deleteById(courseIdToDelete);
                 
                 case "addUser":
                     UserDTO userDTO = fromJsonString(parts[1], UserDTO.class);
@@ -112,7 +106,6 @@ public class RegistrarServiceProxy {
                     break;
                 
                 case "deleteUser":
-                    // ASK TEAM TO RESTEST ON THEIR SIDE FOR VALIDATION *********************
                     int userIdToDelete = Integer.parseInt(parts[1]);
                     userRepository.deleteById(userIdToDelete);
                     break;
@@ -166,10 +159,10 @@ public class RegistrarServiceProxy {
                 
                     User student = userRepository.findById(enrollDTO.studentId()).orElse(null);
                     Section section = sectionRepository.findById(enrollDTO.sectionNo()).orElse(null);
-                    // GENERATED ID IS REMOVED FROM ENROLLMENT ENTITY, HOW CAN WE GET THIS WORKING? *********************
-                    if (student != null && section != null) {
+                    Enrollment existing = enrollmentRepository.findEnrollmentBySectionNoAndStudentId(enrollDTO.sectionNo(), enrollDTO.studentId());
+                    if (student != null && section != null && existing == null) {
                         Enrollment enrollment = new Enrollment();
-                        // enrollment.setEnrollmentId(enrollDTO.enrollmentId());
+                        enrollment.setEnrollmentId(enrollDTO.enrollmentId());
                         enrollment.setGrade(enrollDTO.grade());
                         enrollment.setStudent(student);
                         enrollment.setSection(section);
