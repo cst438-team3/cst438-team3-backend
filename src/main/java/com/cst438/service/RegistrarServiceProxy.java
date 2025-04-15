@@ -1,5 +1,7 @@
 package com.cst438.service;
 
+import com.cst438.domain.Assignment;
+import com.cst438.domain.AssignmentRepository;
 import com.cst438.domain.Course;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
@@ -14,6 +16,7 @@ import com.cst438.dto.CourseDTO;
 import com.cst438.dto.EnrollmentDTO;
 import com.cst438.dto.SectionDTO;
 import com.cst438.dto.UserDTO;
+import com.cst438.dto.AssignmentDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -49,6 +52,9 @@ public class RegistrarServiceProxy {
 
     @Autowired
     TermRepository termRepository;
+
+    @Autowired
+    AssignmentRepository assignmentRepository;
 
     @Autowired
     RabbitTemplate rabbitTemplate;
@@ -184,6 +190,34 @@ public class RegistrarServiceProxy {
                 case "deleteEnrollment":
                     int enrollmentIdToDelete = Integer.parseInt(parts[1]);
                     enrollmentRepository.deleteById(enrollmentIdToDelete);
+                    break;
+
+                case "addAssignment":
+                    AssignmentDTO addAssignmentDTO = fromJsonString(parts[1], AssignmentDTO.class);
+                    Section sectionFind = sectionRepository.findById(addAssignmentDTO.secNo()).orElse(null);
+                    if (sectionFind != null) {
+                        Assignment newAssignment = new Assignment();
+                        newAssignment.setAssignmentId(addAssignmentDTO.id());
+                        newAssignment.setTitle(addAssignmentDTO.title());
+                        newAssignment.setDueDate(addAssignmentDTO.dueDate());
+                        newAssignment.setSection(sectionFind);
+                        assignmentRepository.save(newAssignment);
+                    }
+                    break;
+                
+                case "updateAssignment":
+                    AssignmentDTO updateAssignmentDTO = fromJsonString(parts[1], AssignmentDTO.class);
+                    Assignment assignmentToUpdate = assignmentRepository.findById(updateAssignmentDTO.id()).orElse(null);
+                    if (assignmentToUpdate != null) {
+                        assignmentToUpdate.setTitle(updateAssignmentDTO.title());
+                        assignmentToUpdate.setDueDate(updateAssignmentDTO.dueDate());
+                        assignmentRepository.save(assignmentToUpdate);
+                    }
+                    break;
+                
+                case "deleteAssignment":
+                    int assignmentIdToDelete = Integer.parseInt(parts[1]);
+                    assignmentRepository.deleteById(assignmentIdToDelete);
                     break;
 
                 default:
