@@ -233,7 +233,7 @@ public class RegistrarServiceProxy {
         try {
             String msg = "updateEnrollment " + asJsonString(dto);
             System.out.println("Sending final grade update to Registrar: " + msg);
-            rabbitTemplate.convertAndSend("registrar-queue", msg);
+            rabbitTemplate.convertAndSend(registrarServiceQueue.getName(), msg);
         } catch (Exception e) {
             System.err.println("Failed to send final grade update: " + e.getMessage());
         }
