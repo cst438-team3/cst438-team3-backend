@@ -191,16 +191,16 @@ public class RegistrarServiceProxy {
                     int enrollmentIdToDelete = Integer.parseInt(parts[1]);
                     enrollmentRepository.deleteById(enrollmentIdToDelete);
                     break;
-
+                
+                
                 case "addAssignment":
                     AssignmentDTO addAssignmentDTO = fromJsonString(parts[1], AssignmentDTO.class);
-                    Section sectionFind = sectionRepository.findById(addAssignmentDTO.secNo()).orElse(null);
-                    if (sectionFind != null) {
+                    Section existingAssignment = sectionRepository.findById(addAssignmentDTO.secNo()).orElse(null);
+                    if (existingAssignment != null) {
                         Assignment newAssignment = new Assignment();
-                        newAssignment.setAssignmentId(addAssignmentDTO.id());
                         newAssignment.setTitle(addAssignmentDTO.title());
                         newAssignment.setDueDate(addAssignmentDTO.dueDate());
-                        newAssignment.setSection(sectionFind);
+                        newAssignment.setSection(existingAssignment);
                         assignmentRepository.save(newAssignment);
                     }
                     break;
