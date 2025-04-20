@@ -11,9 +11,11 @@ import com.cst438.dto.EnrollmentDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +40,13 @@ public class StudentScheduleController {
      example URL  /transcript?studentId=19803
      */
     @GetMapping("/transcripts")
-    public List<EnrollmentDTO> getTranscript(@RequestParam("studentId") int studentId) {
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_STUDENT')")
+    public List<EnrollmentDTO> getTranscript(Principal principal) {
+
+        User student = userRepository.findByEmail(principal.getName());
+
         List<EnrollmentDTO> transcript = new ArrayList<>();
-        List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsByStudentIdOrderByTermId(studentId);
+        List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsByStudentIdOrderByTermId(student.getId());
             for (Enrollment e : enrollments) {
                 transcript.add(new EnrollmentDTO(
                     e.getEnrollmentId(),
@@ -70,9 +76,14 @@ public class StudentScheduleController {
      logged in user must be the student (assignment 7)
      */
     @PostMapping("/enrollments/sections/{sectionNo}")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_STUDENT')")
     public EnrollmentDTO addCourse(
             @PathVariable int sectionNo,
-            @RequestParam("studentId") int studentId ) {
+            Principal principal) {
+
+                User student = userRepository.findByEmail(principal.getName());
+                int studentId = student.getId();
+
                 Section section = sectionRepository.findById(sectionNo).orElse(null);
                 if (section == null) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionNo);
@@ -87,11 +98,6 @@ public class StudentScheduleController {
                 }
                 if (enrollmentRepository.findEnrollmentBySectionNoAndStudentId(sectionNo, studentId) != null) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Student is already enrolled.");
-                }
-
-                User student = userRepository.findById(studentId).orElse(null);
-                if (student == null) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found: " + studentId);
                 }
 
                 Enrollment enrollment = new Enrollment();
@@ -113,11 +119,20 @@ public class StudentScheduleController {
      logged in user must be the student (assignment 7)
      */
     @DeleteMapping("/enrollments/{enrollmentId}")
-    public void dropCourse(@PathVariable("enrollmentId") int enrollmentId) {
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_STUDENT')")
+    public void dropCourse(@PathVariable("enrollmentId") int enrollmentId, Principal principal) {
+
+        User student = userRepository.findByEmail(principal.getName());
+
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId).orElse(null);
         if (enrollment == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found: " + enrollmentId);
         }
+
+        if (enrollment.getStudent().getId() != student.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the assigned student can drop this course.");
+        }
+
         Term term = enrollment.getSection().getTerm();
         LocalDate addDate = term.getAddDate().toLocalDate();
         LocalDate dropDeadline = term.getDropDeadline().toLocalDate();
@@ -130,6 +145,4 @@ public class StudentScheduleController {
         }
         enrollmentRepository.delete(enrollment);
     }
-
-
 }
