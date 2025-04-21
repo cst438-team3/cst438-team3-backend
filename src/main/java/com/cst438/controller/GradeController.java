@@ -4,9 +4,11 @@ import com.cst438.domain.*;
 import com.cst438.dto.GradeDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -19,6 +21,8 @@ public class GradeController {
     private EnrollmentRepository enrollmentRepository;
     @Autowired
     private AssignmentRepository assignmentRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      instructor lists the grades for an assignment for all enrolled students
@@ -27,12 +31,22 @@ public class GradeController {
      logged in user must be the instructor for the section (assignment 7)
      */
     @GetMapping("/assignments/{assignmentId}/grades")
-    public List<GradeDTO> getAssignmentGrades(@PathVariable("assignmentId") int assignmentId) {
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_INSTRUCTOR')")
+    public List<GradeDTO> getAssignmentGrades(@PathVariable("assignmentId") int assignmentId, Principal principal) {
+
+        User instructor = userRepository.findByEmail(principal.getName());
+
         Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
         if (assignment==null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "assignment not found");
         }
         int sectionNo = assignment.getSection().getSectionNo();
+
+        // Check if the instructor is associated with the section
+        if (!assignment.getSection().getInstructorEmail().equals(instructor.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the assigned instructor can view the grades for this section");
+        }
+
         List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsBySectionNoOrderByStudentName(sectionNo);
 
         List<GradeDTO> gradeDTOList = new ArrayList<>();
@@ -65,9 +79,20 @@ public class GradeController {
      logged in user must be the instructor for the section (assignment 7)
      */
     @PutMapping("/grades")
-    public void updateGrades(@RequestBody List<GradeDTO> dlist) {
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_INSTRUCTOR')")
+    public void updateGrades(@RequestBody List<GradeDTO> dlist, Principal principal) {
+
+        User instructor = userRepository.findByEmail(principal.getName());
+
         for (GradeDTO grade : dlist) {
             Grade g = gradeRepository.findById(grade.gradeId()).orElseThrow(() -> new RuntimeException("Grade not found for id: " + grade.gradeId()));
+
+            Assignment assignment = g.getAssignment();
+
+            if(!assignment.getSection().getInstructorEmail().equalsIgnoreCase(instructor.getEmail())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the assigned instructor can update the grades for this section");
+            }
+
             g.setScore(grade.score());
             gradeRepository.save(g);
         }
