@@ -5,7 +5,7 @@ insert into term (term_id, tyear, semester, add_date, add_deadline, drop_deadlin
 (8, 2023, 'Fall' ,  '2023-05-01', '2023-08-30', '2023-08-30', '2023-08-15', '2023-12-17'),
 (9, 2024, 'Spring', '2023-11-01', '2024-03-30', '2024-03-30', '2024-01-15', '2024-05-17'),
 (10, 2024, 'Fall',  '2024-05-01', '2024-08-30', '2024-08-30', '2024-08-15', '2024-12-17'),
-(11, 2025, 'Spring', '2025-01-01', '2025-04-30', '2025-04-30', '2025-01-15', '2025-05-17');
+(11, 2025, 'Spring', '2025-01-01', '2025-05-01', '2025-05-30', '2025-04-21', '2025-07-17');
 
 insert into user_table (id, name, email, password, type) values
 (1, 'david wisneski', 'dwisneski@csumb.edu', '', 'INSTRUCTOR'),
@@ -37,7 +37,7 @@ insert into section(section_no, course_id, sec_id, term_id, building, room, time
 (8, 'cst363', 1, 9, '052', '104', 'M W 10:00-11:50', 'dwisneski@csumb.edu'),
 (9, 'cst363', 2, 9, '052', '102', 'M W 2:00-3:50', 'dwisneski@csumb.edu'),
 (10, 'cst438', 1, 9, '052', '222', 'T Th 12:00-1:50', 'dwisneski@csumb.edu'),
-(11, 'cst499', 1, 11, '052', '106', 'T Th 1:00-3:00',  'dwisneski@csumb.edu');
+(11, 'cst363', 1, 11, '052', '104', 'M W 10:00-11:50', 'dwisneski@csumb.edu');
 
 insert into enrollment (enrollment_id, grade, section_no, user_id ) values
 (1, 'A', 1, 3),
