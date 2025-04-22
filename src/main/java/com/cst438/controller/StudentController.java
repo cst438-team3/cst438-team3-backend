@@ -6,9 +6,11 @@ import com.cst438.dto.AssignmentStudentDTO;
 import com.cst438.dto.EnrollmentDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -36,14 +38,20 @@ public class StudentController {
      logged in user must be the student (assignment 7)
      */
    @GetMapping("/enrollments")
+   @PreAuthorize("hasAuthority('SCOPE_ROLE_STUDENT')")
    public List<EnrollmentDTO> getSchedule(
            @RequestParam("year") int year,
            @RequestParam("semester") String semester,
-           @RequestParam("studentId") int studentId) {
+           Principal principal) {
+
+       String email = principal.getName();
 
        //check if studentId exists
-       User student = userRepository.findById(studentId)
-               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found with id: " + studentId));
+       User student = userRepository.findByEmail(email);
+       if (student == null) {
+           throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found with email: " + email);
+       }
+       int studentId = student.getId();
 
        //check if year & semester are valid
        if(year < 1900 || year > 2100) {

@@ -6,9 +6,11 @@ import com.cst438.domain.EnrollmentRepository;
 import com.cst438.dto.EnrollmentDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,10 +27,17 @@ public class EnrollmentController {
      logged in user must be the instructor for the section (assignment 7)
      */
     @GetMapping("/sections/{sectionNo}/enrollments")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_INSTRUCTOR')")
     public List<EnrollmentDTO> getEnrollments(
-            @PathVariable("sectionNo") int sectionNo ) {
+            @PathVariable("sectionNo") int sectionNo, Principal principal ) {
+                String instructorEmail = principal.getName();
                 List<Enrollment> enrollments = enrollmentRepository.findEnrollmentsBySectionNoOrderByStudentName(sectionNo);
-                
+                if (!enrollments.isEmpty()) {
+                    String sectionInstructor = enrollments.get(0).getSection().getInstructorEmail();
+                    if (!instructorEmail.equals(sectionInstructor)) {
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access denied: Not your section");
+                    }
+                }
                 List<EnrollmentDTO> enrollmentDTOs = new ArrayList<>();
                 for (Enrollment e : enrollments) {
                     enrollmentDTOs.add(new EnrollmentDTO(
@@ -60,11 +69,17 @@ public class EnrollmentController {
      logged in user must be the instructor for the section (assignment 7)
      */
     @PutMapping("/enrollments")
-    public void updateEnrollmentGrade(@RequestBody List<EnrollmentDTO> dlist) {
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_INSTRUCTOR')")
+    public void updateEnrollmentGrade(@RequestBody List<EnrollmentDTO> dlist, Principal principal) {
+        String instructorEmail = principal.getName();
         for (EnrollmentDTO dto : dlist) {
             Enrollment enrollment = enrollmentRepository.findById(dto.enrollmentId()).orElse(null);
             if (enrollment == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found");
+            }
+            String sectionInstructor = enrollment.getSection().getInstructorEmail();
+            if (!instructorEmail.equals(sectionInstructor)) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access denied: Not your section");
             }
             enrollment.setGrade(dto.grade());
             enrollmentRepository.save(enrollment);  
